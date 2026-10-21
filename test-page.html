@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Mac Check — Hands-on tests</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root { --bg:#f5f5f7; --card:#fff; --text:#1d1d1f; --muted:#6e6e73; --line:#d2d2d7; --ok:#1f9d55; --accent:#0071e3; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#1c1c1e; --card:#2c2c2e; --text:#f5f5f7; --muted:#a1a1a6; --line:#3a3a3c; } }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 -apple-system, BlinkMacSystemFont, sans-serif; }
+  main { max-width:980px; margin:0 auto; padding:24px 16px 60px; }
+  h1 { font-size:26px; margin:0 0 4px } h2 { font-size:19px; margin:0 0 4px }
+  .sub { color:var(--muted); margin:0 0 20px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px; }
+  .how { color:var(--muted); margin:0 0 12px }
+  .look { margin:8px 0 0; padding-left:20px; color:var(--muted) } .look li { margin:2px 0 }
+  button { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); cursor:pointer; margin:0 6px 6px 0 }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff }
+  .status { font-weight:600; margin-top:8px } .done { color:var(--ok) }
+  /* keyboard */
+  .kb { display:flex; flex-direction:column; gap:5px; user-select:none }
+  .row { display:flex; gap:5px }
+  .key { flex:1 0 0; min-width:0; height:40px; border:1px solid var(--line); border-radius:6px; display:flex; align-items:center; justify-content:center;
+         font-size:12px; color:var(--muted); background:var(--bg); transition:background .1s }
+  .key.hit { background:var(--ok); color:#fff; border-color:var(--ok) }
+  .key.down { outline:3px solid var(--accent) }
+  /* trackpad */
+  .pad { position:relative; height:220px; border:2px dashed var(--line); border-radius:12px; display:flex; align-items:center; justify-content:center; color:var(--muted) }
+  .corner { position:absolute; width:64px; height:64px; border-radius:10px; background:var(--bg); border:1px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px }
+  .corner.hit { background:var(--ok); color:#fff; border-color:var(--ok) }
+  .meter { height:14px; background:var(--bg); border:1px solid var(--line); border-radius:7px; overflow:hidden; margin-top:10px }
+  .meter > div { height:100%; width:0; background:var(--accent); transition:width .05s }
+  /* full-screen colour test */
+  #colour { position:fixed; inset:0; display:none; cursor:none; z-index:10 }
+  #colour .hint { position:absolute; bottom:24px; width:100%; text-align:center; font-size:15px; color:#888; mix-blend-mode:difference; transition:opacity 1s }
+</style></head>
+<body>
+<main>
+  <h1>Hands-on tests</h1>
+  <p class="sub">Four quick tests for things only you can see, hear or feel. Do them in any order.</p>
+
+  <section class="card">
+    <h2>1 · Screen: dead pixels and backlight</h2>
+    <p class="how">Fills the whole screen with one colour at a time. Click to move to the next colour; press Esc to stop.</p>
+    <button class="primary" id="colourBtn">Start screen test</button>
+    <ul class="look">
+      <li><b>Black:</b> look for bright dots (stuck pixels) and glowing patches at the edges (backlight bleed).</li>
+      <li><b>White, red, green, blue:</b> look for dark dots (dead pixels), stains or tinted areas.</li>
+      <li><b>Grey:</b> look for uneven brightness or lines.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>2 · Keyboard</h2>
+    <p class="how">Press every key. Each one turns green when the Mac receives it. For the top row, <b>hold fn</b> and press F1–F12.
+      Avoid ⌘ shortcuts such as ⌘Q or ⌘W, which would close this page; tap ⌘ on its own instead.</p>
+    <div class="kb" id="kb"></div>
+    <p class="status" id="kbStatus"></p>
+    <button id="kbReset">Reset</button>
+  </section>
+
+  <section class="card">
+    <h2>3 · Speakers</h2>
+    <p class="how">Plays tones through each speaker. Turn the volume up to about 75%.</p>
+    <button class="primary" data-pan="-1">Left speaker</button>
+    <button class="primary" data-pan="1">Right speaker</button>
+    <button data-pan="0">Both</button>
+    <button id="sweep">Bass sweep (rattle test)</button>
+    <ul class="look">
+      <li><b>Left / Right:</b> the sound should come clearly from that side only. Silence or a very quiet side means a dead speaker.</li>
+      <li><b>Bass sweep:</b> goes from deep to high. Buzzing, crackling or rattling means a damaged speaker.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>4 · Trackpad</h2>
+    <p class="how">Click inside each of the four corner boxes, then press firmly anywhere in the box to test Force Touch.</p>
+    <div class="pad" id="pad">
+      <div class="corner" style="top:8px;left:8px">click</div><div class="corner" style="top:8px;right:8px">click</div>
+      <div class="corner" style="bottom:8px;left:8px">click</div><div class="corner" style="bottom:8px;right:8px">click</div>
+      <span id="padText">Press firmly here</span>
+    </div>
+    <div class="meter"><div id="force"></div></div>
+    <p class="status" id="padStatus"></p>
+    <ul class="look">
+      <li>Every corner should click with the same feel and sound. A dead or mushy area means a faulty trackpad.</li>
+      <li>Pressing harder should fill the blue bar and give a second, deeper “click”. If the bar never moves, Force Touch is broken.</li>
+    </ul>
+  </section>
+</main>
+
+<div id="colour"><div class="hint" id="colourHint">Click for next colour · Esc to stop</div></div>
+
+<script>
+// 1 · colour test
+const colours = ['#000', '#fff', '#f00', '#0f0', '#00f', '#808080'];
+const colour = document.getElementById('colour'), hint = document.getElementById('colourHint');
+let ci = 0;
+function showColour() { colour.style.background = colours[ci]; }
+document.getElementById('colourBtn').onclick = () => {
+  ci = 0; showColour(); colour.style.display = 'block'; hint.style.opacity = 1;
+  setTimeout(() => hint.style.opacity = 0, 2500);
+  document.documentElement.requestFullscreen?.() || document.documentElement.webkitRequestFullscreen?.();
+};
+colour.onclick = () => { ci++; if (ci >= colours.length) return stopColour(); showColour(); };
+function stopColour() { colour.style.display = 'none'; if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) colour.style.display = 'none'; });
+document.addEventListener('webkitfullscreenchange', () => { if (!document.webkitFullscreenElement) colour.style.display = 'none'; });
+
+// 2 · keyboard (MacBook US layout; extra keys from other layouts are counted too)
+const layout = [
+  [['Escape','esc'],...Array.from({length:12},(_, i)=>['F'+(i+1),'F'+(i+1)])],
+  [['Backquote','`'],...'1234567890'.split('').map(d=>['Digit'+d,d]),['Minus','-'],['Equal','='],['Backspace','delete']],
+  [['Tab','tab'],...'QWERTYUIOP'.split('').map(k=>['Key'+k,k]),['BracketLeft','['],['BracketRight',']'],['Backslash','\\']],
+  [['CapsLock','caps'],...'ASDFGHJKL'.split('').map(k=>['Key'+k,k]),['Semicolon',';'],['Quote',"'"],['Enter','return']],
+  [['ShiftLeft','shift'],...'ZXCVBNM'.split('').map(k=>['Key'+k,k]),['Comma',','],['Period','.'],['Slash','/'],['ShiftRight','shift']],
+  [['ControlLeft','control'],['AltLeft','option'],['MetaLeft','⌘'],['Space','space'],['MetaRight','⌘'],['AltRight','option'],
+   ['ArrowLeft','←'],['ArrowUp','↑'],['ArrowDown','↓'],['ArrowRight','→']],
+];
+const kb = document.getElementById('kb'), kbStatus = document.getElementById('kbStatus'), keys = {};
+for (const row of layout) {
+  const r = document.createElement('div'); r.className = 'row';
+  for (const [code, label] of row) {
+    const k = document.createElement('div'); k.className = 'key'; k.textContent = label;
+    if (code === 'Space') k.style.flexGrow = 6;
+    if (['Backspace','Tab','CapsLock','Enter','ShiftLeft','ShiftRight'].includes(code)) k.style.flexGrow = 1.6;
+    keys[code] = k; r.appendChild(k);
+  }
+  kb.appendChild(r);
+}
+const total = Object.keys(keys).length; let hit = new Set(), extra = new Set();
+function kbUpdate() {
+  const n = [...hit].filter(c => keys[c]).length;
+  kbStatus.className = 'status' + (n === total ? ' done' : '');
+  kbStatus.textContent = n === total ? `All ${total} keys work ✓` : `${n} of ${total} keys tested` + (extra.size ? ` (+${extra.size} other)` : '');
+}
+document.addEventListener('keydown', e => {
+  if (colour.style.display === 'block') { if (e.key === 'Escape') stopColour(); return; }
+  if (!e.metaKey || e.code.startsWith('Meta')) e.preventDefault();
+  hit.add(e.code); (keys[e.code] ? keys[e.code].classList.add('hit', 'down') : extra.add(e.code)); kbUpdate();
+});
+document.addEventListener('keyup', e => keys[e.code]?.classList.remove('down'));
+// Caps Lock only fires keydown when it switches on, so count it from either event
+document.addEventListener('keyup', e => { if (e.code === 'CapsLock') { hit.add('CapsLock'); keys.CapsLock.classList.add('hit'); kbUpdate(); } });
+document.getElementById('kbReset').onclick = () => { hit.clear(); extra.clear(); Object.values(keys).forEach(k => k.classList.remove('hit')); kbUpdate(); };
+kbUpdate();
+
+// 3 · speakers
+let ctx;
+function audio() { ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); return ctx; }
+function tone(pan, from, to, secs) {
+  const a = audio(), o = a.createOscillator(), g = a.createGain(), p = a.createStereoPanner(), t = a.currentTime;
+  o.frequency.setValueAtTime(from, t); o.frequency.exponentialRampToValueAtTime(to, t + secs);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.5, t + 0.05); g.gain.setValueAtTime(0.5, t + secs - 0.1); g.gain.linearRampToValueAtTime(0, t + secs);
+  p.pan.value = pan; o.connect(g).connect(p).connect(a.destination); o.start(t); o.stop(t + secs);
+}
+document.querySelectorAll('[data-pan]').forEach(b => b.onclick = () => tone(+b.dataset.pan, 440, 880, 1.5));
+document.getElementById('sweep').onclick = () => tone(0, 40, 2000, 6);
+
+// 4 · trackpad: corners + Force Touch (Safari reports pressure as webkitForce: 1 = click, 2 = force click)
+const padStatus = document.getElementById('padStatus'), force = document.getElementById('force');
+let corners = 0, forceOK = false;
+function padUpdate() {
+  padStatus.className = 'status' + (corners === 4 && forceOK ? ' done' : '');
+  padStatus.textContent = `Corners: ${corners} of 4 · Force Touch: ${forceOK ? 'works ✓' : 'press firmly to test'}`;
+}
+document.querySelectorAll('.corner').forEach(c => c.onclick = () => { if (!c.classList.contains('hit')) { c.classList.add('hit'); c.textContent = '✓'; corners++; padUpdate(); } });
+const pad = document.getElementById('pad');
+pad.addEventListener('webkitmouseforcechanged', e => {
+  const f = e.webkitForce || 0;
+  force.style.width = Math.min(100, (f / 3) * 100) + '%';
+  if (f >= 2 && !forceOK) { forceOK = true; document.getElementById('padText').textContent = 'Force click detected ✓'; padUpdate(); }
+});
+pad.addEventListener('mouseup', () => force.style.width = '0');
+if (!('onwebkitmouseforcechanged' in pad)) document.getElementById('padText').textContent = 'Open this page in Safari to test Force Touch';
+padUpdate();
+</script>
+</body></html>
