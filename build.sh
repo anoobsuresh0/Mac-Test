@@ -3,6 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 APP=dist/MacCheck.app
+VERSION=${VERSION:-1.1}   # the release workflow sets this from the git tag (v1.2 -> 1.2)
 rm -rf dist && mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 
 # macOS 12 target so it runs on used Macs that were never updated
@@ -20,8 +21,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleName</key><string>Mac Check</string>
   <key>CFBundleDisplayName</key><string>Mac Check</string>
   <key>CFBundlePackageType</key><string>APPL</string>
-  <key>CFBundleShortVersionString</key><string>1.1</string>
-  <key>CFBundleVersion</key><string>2</string>
+  <key>CFBundleShortVersionString</key><string>$VERSION</string>
+  <key>CFBundleVersion</key><string>$VERSION</string>
   <key>NSBluetoothAlwaysUsageDescription</key><string>Mac Check scans for nearby Bluetooth devices to test that this Mac's Bluetooth antenna works.</string>
   <key>LSMinimumSystemVersion</key><string>12.0</string>
   <key>NSHighResolutionCapable</key><true/>

@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/download",
+      "destination": "https://github.com/anoobsuresh0/Mac-Test/releases/latest/download/MacCheck.dmg",
+      "permanent": false
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+# Push a version tag (git tag v1.2 && git push origin v1.2) to build MacCheck.dmg on a Mac
+# and publish it as a GitHub Release. The website always links to the newest one.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write   # needed to create the release
+
+jobs:
+  release:
+    runs-on: macos-15   # Apple Silicon runner, same CPU type as the Macs the app targets
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build app and DMG
+        run: VERSION="${GITHUB_REF_NAME#v}" ./build.sh
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # keep the asset name fixed: the site downloads .../releases/latest/download/MacCheck.dmg
+        run: gh release create "$GITHUB_REF_NAME" dist/MacCheck.dmg --title "Mac Check $GITHUB_REF_NAME" --generate-notes

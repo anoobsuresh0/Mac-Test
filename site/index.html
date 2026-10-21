@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mac Check: inspect a used Mac before you buy it</title>
+<meta name="description" content="A free Mac app that checks a second-hand Apple Silicon MacBook for Activation Lock, company management, tampering, battery and SSD wear, crashes and dead parts before you pay.">
+<link rel="icon" href="favicon.png">
+<meta property="og:title" content="Mac Check">
+<meta property="og:description" content="Inspect a used Apple Silicon Mac before you pay for it.">
+<meta property="og:image" content="icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Familjen+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --page: #E9EBE6;      /* workshop grey */
+    --sheet: #FFFFFF;
+    --ink: #23241F;       /* graphite, from the icon's laptop */
+    --muted: #5E6058;
+    --line: #CDD0C8;
+    --seal: #4F7D1A;      /* the icon's seal green, darkened for text contrast */
+    --seal-bright: #639922;
+    --amber: #9A5F00;
+    --red: #B3261E;
+    --focus: #2F6FDB;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --page: #1B1C19; --sheet: #262723; --ink: #ECEDE8; --muted: #A9ABA2; --line: #3A3C36;
+            --seal: #8CC34A; --seal-bright: #639922; --amber: #E3A23B; --red: #F2867E; }
+  }
+  * { box-sizing: border-box }
+  html { -webkit-text-size-adjust: 100% }
+  body { margin: 0; background: var(--page); color: var(--ink);
+         font: 17px/1.6 "Atkinson Hyperlegible", system-ui, sans-serif; }
+  a { color: inherit; text-underline-offset: 3px }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 6px }
+  h1, h2, h3 { font-family: "Familjen Grotesk", system-ui, sans-serif; line-height: 1.1; margin: 0 }
+  h1 { font-size: clamp(40px, 6vw, 68px); font-weight: 700; letter-spacing: -0.025em; max-width: 12ch }
+  h2 { font-size: clamp(28px, 3.4vw, 38px); font-weight: 700; letter-spacing: -0.015em; margin-bottom: 14px }
+  h3 { font-size: 19px; font-weight: 700 }
+  p { margin: 0 0 1em; max-width: 62ch }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px }
+
+  /* header */
+  .top { display: flex; align-items: center; justify-content: space-between; padding: 20px 0 }
+  .brand { display: flex; align-items: center; gap: 10px; font: 700 19px "Familjen Grotesk", sans-serif; text-decoration: none }
+  .brand img { width: 34px; height: 34px }
+  .top nav a { color: var(--muted); text-decoration: none; margin-left: 22px; font-size: 15px }
+  .top nav a:hover { color: var(--ink) }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 56px; align-items: center; padding: 48px 0 88px }
+  .lede { font-size: 20px; color: var(--muted); margin: 22px 0 30px; max-width: 34ch }
+  .get { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 20px }
+  .dl { display: inline-flex; align-items: center; gap: 10px; background: var(--seal-bright); color: #fff; text-decoration: none;
+        font: 700 18px "Familjen Grotesk", sans-serif; padding: 15px 24px; border-radius: 12px; }
+  .dl:hover { background: #557f1e }
+  .dl svg { width: 20px; height: 20px }
+  .meta { font-size: 14px; color: var(--muted); line-height: 1.45 }
+  .meta strong { color: var(--ink) }
+  .note { margin-top: 22px; font-size: 15px; color: var(--muted) }
+
+  /* the inspection slip */
+  .slip { background: var(--sheet); border-radius: 4px 4px 14px 14px; padding: 26px 26px 22px; position: relative;
+          box-shadow: 0 1px 0 var(--line), 0 18px 40px -24px rgba(35, 36, 31, .45); }
+  .slip::before { /* perforated tear-off edge */
+    content: ""; position: absolute; left: 0; right: 0; top: -7px; height: 14px;
+    background: radial-gradient(circle at 7px 7px, var(--page) 5px, transparent 5.5px) 0 0 / 18px 14px repeat-x; }
+  .slip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 6px }
+  .slip-head h3 { font-size: 20px }
+  .slip-head span { font-size: 13px; color: var(--muted) }
+  .slip ul { list-style: none; margin: 0; padding: 0 }
+  .slip li { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: baseline; padding: 9px 0; border-bottom: 1px dashed var(--line); font-size: 15px }
+  .slip li b { font-weight: 400; color: var(--muted); font-size: 13px; text-align: right }
+  .mark { font-weight: 700; text-align: center }
+  .pass { color: var(--seal) } .warn { color: var(--amber) } .fail { color: var(--red) }
+  .verdict { display: flex; gap: 12px; align-items: center; margin-top: 16px; padding: 12px 14px; border: 2px solid var(--amber); border-radius: 10px; font-size: 15px }
+  .verdict strong { font-family: "Familjen Grotesk", sans-serif; font-size: 17px; display: block }
+  @media (prefers-reduced-motion: no-preference) {
+    .slip li { animation: tick .35s ease-out both }
+    .slip li:nth-child(2) { animation-delay: .15s } .slip li:nth-child(3) { animation-delay: .3s }
+    .slip li:nth-child(4) { animation-delay: .45s } .slip li:nth-child(5) { animation-delay: .6s }
+    .slip li:nth-child(6) { animation-delay: .75s } .slip li:nth-child(7) { animation-delay: .9s }
+    .verdict { animation: tick .4s 1.15s ease-out both }
+    @keyframes tick { from { opacity: 0; transform: translateY(4px) } }
+  }
+
+  /* sections */
+  section { padding: 72px 0; border-top: 1px solid var(--line) }
+  .intro { color: var(--muted); font-size: 18px; margin-bottom: 36px }
+  .checks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 56px; margin: 0 }
+  .checks dt { font: 700 19px "Familjen Grotesk", sans-serif; margin-bottom: 4px }
+  .checks dd { margin: 0; color: var(--muted) }
+  .tests { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px }
+  .tests h3 { margin-bottom: 6px }
+  .tests p { color: var(--muted); font-size: 16px }
+  .tests svg { width: 30px; height: 30px; color: var(--seal); margin-bottom: 10px }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; display: grid; gap: 22px; max-width: 760px }
+  .steps li { counter-increment: s; display: grid; grid-template-columns: 44px 1fr; gap: 16px }
+  .steps li::before { content: counter(s); font: 700 20px "Familjen Grotesk", sans-serif; width: 38px; height: 38px; border-radius: 50%;
+                      border: 2px solid var(--ink); display: flex; align-items: center; justify-content: center }
+  .steps p { margin: 4px 0 0; color: var(--muted) }
+  .callout { background: var(--sheet); border-left: 4px solid var(--amber); padding: 16px 20px; margin-top: 28px; max-width: 760px }
+  .callout p { margin: 0 }
+  kbd, code { font-family: ui-monospace, Menlo, monospace; font-size: .9em; background: var(--sheet); border: 1px solid var(--line); border-radius: 5px; padding: 1px 6px }
+  details { border-bottom: 1px solid var(--line); padding: 16px 0; max-width: 760px }
+  summary { font: 700 19px "Familjen Grotesk", sans-serif; cursor: pointer; list-style-position: outside }
+  details p { color: var(--muted); margin: 10px 0 0 }
+  footer { padding: 40px 0 56px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px }
+  footer p { max-width: none }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; gap: 48px; padding-top: 24px }
+    .tests { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+  }
+  @media (max-width: 600px) {
+    .wrap { padding: 0 16px }
+    .top nav { display: none }
+    .checks, .tests { grid-template-columns: 1fr }
+    .slip { padding: 22px 16px 18px }
+    .slip li { grid-template-columns: 20px 1fr }
+    .slip li b { grid-column: 2; text-align: left }
+    section { padding: 56px 0 }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#"><img src="icon.png" alt="">Mac Check</a>
+    <nav>
+      <a href="#checks">What it checks</a>
+      <a href="#install">Install</a>
+      <a href="https://github.com/anoobsuresh0/Mac-Test">Source code</a>
+    </nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div>
+        <h1>Know what you're buying before you hand over the money.</h1>
+        <p class="lede">Mac Check inspects a second-hand Apple Silicon MacBook in about ten seconds, then walks you through the tests only you can do.</p>
+        <div class="get">
+          <a class="dl" id="download" href="https://github.com/anoobsuresh0/Mac-Test/releases/latest/download/MacCheck.dmg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>
+            <span id="dl-label">Download for Mac</span>
+          </a>
+          <div class="meta"><strong id="version">Latest version</strong><br><span id="details">Free, for Apple Silicon Macs on macOS 12 or later</span></div>
+        </div>
+        <p class="note">First time opening it? macOS will ask you to confirm. <a href="#install">Here's how.</a></p>
+      </div>
+
+      <div class="slip" aria-label="Example inspection report">
+        <div class="slip-head"><h3>Inspection report</h3><span>MacBook Air, M2</span></div>
+        <ul>
+          <li><span class="mark pass" aria-label="Pass">✓</span>Activation Lock is off<b>Ownership</b></li>
+          <li><span class="mark pass" aria-label="Pass">✓</span>Not registered to a company or school<b>Ownership</b></li>
+          <li><span class="mark pass" aria-label="Pass">✓</span>No remote-control or tracking software<b>Security</b></li>
+          <li><span class="mark pass" aria-label="Pass">✓</span>No system crashes recorded<b>Crash history</b></li>
+          <li><span class="mark warn" aria-label="Warning">!</span>Battery capacity 78%<b>Battery</b></li>
+          <li><span class="mark pass" aria-label="Pass">✓</span>SSD wear 3%, no data errors<b>Storage</b></li>
+          <li><span class="mark pass" aria-label="Pass">✓</span>Wi-Fi sees 9 networks<b>Wireless</b></li>
+        </ul>
+        <div class="verdict"><span class="mark warn" aria-hidden="true">!</span><div><strong>Mostly good, one thing to look at</strong>Use the battery to negotiate the price down.</div></div>
+      </div>
+    </div>
+
+    <section id="checks">
+      <h2>What it checks automatically</h2>
+      <p class="intro">Every result comes with a plain-English explanation and what to do about it. Nothing on the Mac is changed.</p>
+      <dl class="checks">
+        <div><dt>Ownership locks</dt><dd>Activation Lock, company or school ownership, and remote management. Any of these can lock the Mac after you've paid.</dd></div>
+        <div><dt>Tampering</dt><dd>Disabled security features, hidden user accounts, remote login, and remote-control or tracking tools left behind.</dd></div>
+        <div><dt>Crash history</dt><dd>Whole-system crashes, which usually point to failing memory, storage or logic board. Check this before the seller erases the Mac.</dd></div>
+        <div><dt>Battery and charger</dt><dd>Charge cycles, real capacity in mAh against the original, condition, and whether the charger is genuine and actually charging.</dd></div>
+        <div><dt>SSD wear</dt><dd>How much of the drive's life is used, data written, hours powered on, and errors, read straight from the drive.</dd></div>
+        <div><dt>Wireless and parts</dt><dd>Wi-Fi reach, Bluetooth, camera, microphone and Touch ID. A part that doesn't show up is dead or disconnected.</dd></div>
+      </dl>
+    </section>
+
+    <section>
+      <h2>Then test it by hand</h2>
+      <p class="intro">Some faults only show up when you look, listen and touch. The app guides each one.</p>
+      <div class="tests">
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8"/></svg>
+          <h3>Screen and keyboard</h3><p>Full-screen colours for dead pixels, and a keyboard map that lights up every key you press.</p>
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+          <h3>Speakers and trackpad</h3><p>Left and right speaker tones, a bass sweep for rattles, and a Force Touch pressure meter.</p>
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v3M12 18v3M4.6 6.6l2.1 2.1M17.3 15.3l2.1 2.1M3 12h3M18 12h3"/><circle cx="12" cy="12" r="3"/></svg>
+          <h3>Stress test</h3><p>Three minutes at full power to reveal overheating, a weak fan or a board that crashes under load.</p>
+        </div>
+        <div>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="7" rx="1.5"/><path d="M9 10v4a3 3 0 0 0 6 0v-4M12 17v4"/></svg>
+          <h3>Ports and Bluetooth</h3><p>Each USB-C port lights up when it detects a device, and a scan proves Bluetooth reaches nearby phones.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Using it at the seller's</h2>
+      <ol class="steps">
+        <li><div><h3>Bring the app on a USB stick</h3><p>Copy the DMG to a stick before you go, so you don't need the seller's Wi-Fi password to get started.</p></div></li>
+        <li><div><h3>Run the checks before anything is erased</h3><p>Crash history and leftover software disappear after an erase, so look at them first.</p></div></li>
+        <li><div><h3>Do the hands-on tests</h3><p>Screen, keyboard, speakers, trackpad, stress test and ports take about ten minutes in total.</p></div></li>
+        <li><div><h3>Watch the seller erase it, then pay</h3><p>After Erase All Content and Settings, setup must not ask for the seller's Apple Account or show a Remote Management screen.</p></div></li>
+      </ol>
+    </section>
+
+    <section id="install">
+      <h2>Installing</h2>
+      <ol class="steps">
+        <li><div><h3>Open the DMG and drag Mac Check into Applications</h3></div></li>
+        <li><div><h3>Open Mac Check</h3><p>Because the app is free and not distributed through Apple, macOS shows “Apple could not verify Mac Check”. Click <strong>Done</strong>.</p></div></li>
+        <li><div><h3>Allow it once</h3><p>Open <strong>System Settings › Privacy &amp; Security</strong>, scroll down and click <strong>Open Anyway</strong> next to Mac Check. From then on it opens normally.</p></div></li>
+      </ol>
+      <div class="callout"><p>Copying the DMG from a USB stick formatted as ExFAT or FAT32 usually skips this prompt entirely, which is handy on a seller's Mac.</p></div>
+    </section>
+
+    <section>
+      <h2>Questions</h2>
+      <details><summary>Is it safe to run on someone else's Mac?</summary><p>Yes. It only reads information and changes nothing. The optional admin checks ask for the Mac's password through macOS's own dialog, so the seller types it, not you. All the code is <a href="https://github.com/anoobsuresh0/Mac-Test">open on GitHub</a>.</p></details>
+      <details><summary>Which Macs does it work on?</summary><p>Apple Silicon Macs (M1 and later) running macOS 12 Monterey or newer. It doesn't support Intel Macs.</p></details>
+      <details><summary>Does it need the internet?</summary><p>No, except for one admin check that asks Apple whether an organisation owns the serial number, and Apple's warranty page.</p></details>
+      <details><summary>Can it check the warranty automatically?</summary><p>Apple doesn't offer a public way to do that, and its coverage page uses a CAPTCHA. Mac Check copies the serial number and opens the page, so you only paste it.</p></details>
+      <details><summary>Does a clean report guarantee the Mac is perfect?</summary><p>No tool can promise that. Mac Check catches the common deal-breakers and hidden faults, and Apple Diagnostics (hold the power button, then press ⌘D) covers the rest of the hardware.</p></details>
+    </section>
+  </main>
+
+  <footer>
+    <p>Mac Check is a free, independent project and isn't affiliated with or endorsed by Apple. Mac, MacBook and Apple Silicon are trademarks of Apple Inc.
+      <a href="https://github.com/anoobsuresh0/Mac-Test">Source code</a>, <a href="https://github.com/anoobsuresh0/Mac-Test/releases">all releases</a>.</p>
+  </footer>
+</div>
+
+<script>
+// Show the newest release's version and size; the button itself works without this.
+fetch('https://api.github.com/repos/anoobsuresh0/Mac-Test/releases/latest')
+  .then(r => {
+    if (r.status === 404) throw 'none';
+    return r.ok ? r.json() : Promise.reject();
+  })
+  .then(rel => {
+    const dmg = (rel.assets || []).find(a => a.name === 'MacCheck.dmg');
+    const date = new Date(rel.published_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+    document.getElementById('version').textContent = 'Version ' + rel.tag_name.replace(/^v/, '');
+    document.getElementById('details').textContent =
+      (dmg ? (dmg.size / 1e6).toFixed(1) + ' MB, ' : '') + 'released ' + date + '. Apple Silicon, macOS 12 or later.';
+  })
+  .catch(e => {
+    if (e !== 'none') return;   // network or rate-limit: keep the default text
+    const a = document.getElementById('download');
+    a.href = 'https://github.com/anoobsuresh0/Mac-Test/releases';
+    document.getElementById('dl-label').textContent = 'First release coming soon';
+    document.getElementById('version').textContent = 'No release yet';
+  });
+</script>
+</body>
+</html>
